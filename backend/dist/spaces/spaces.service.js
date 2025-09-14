@@ -16,6 +16,7 @@ exports.SpacesService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
+const mongoose_3 = require("mongoose");
 const space_schema_1 = require("./schemas/space.schema");
 let SpacesService = class SpacesService {
     constructor(spaceModel) {
@@ -32,6 +33,9 @@ let SpacesService = class SpacesService {
             .exec();
     }
     async findOne(id) {
+        if (!mongoose_3.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid space ID format');
+        }
         const space = await this.spaceModel
             .findById(id)
             .populate('owner', 'name email companyName')
@@ -48,6 +52,9 @@ let SpacesService = class SpacesService {
             .exec();
     }
     async update(id, updateSpaceDto, ownerId) {
+        if (!mongoose_3.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid space ID format');
+        }
         const space = await this.spaceModel.findOne({ _id: id, owner: ownerId });
         if (!space) {
             throw new common_1.NotFoundException('Space not found or you are not the owner');
@@ -56,6 +63,9 @@ let SpacesService = class SpacesService {
         return space.save();
     }
     async remove(id, ownerId) {
+        if (!mongoose_3.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid space ID format');
+        }
         const result = await this.spaceModel.deleteOne({ _id: id, owner: ownerId });
         if (result.deletedCount === 0) {
             throw new common_1.NotFoundException('Space not found or you are not the owner');

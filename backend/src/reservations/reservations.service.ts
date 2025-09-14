@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   Reservation,
   ReservationDocument,
@@ -14,7 +14,7 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { SpacesService } from '../spaces/spaces.service';
 import { PaymentsService, RazorpayOrder } from '../payments/payments.service';
 
-interface CreateReservationResponse {
+export interface CreateReservationResponse {
   reservation: ReservationDocument;
   razorpayOrder: RazorpayOrder;
 }
@@ -38,6 +38,11 @@ export class ReservationsService {
 
     if (!space) {
       throw new NotFoundException('Space not found');
+    }
+
+    // Validate space has a price
+    if (!space.price) {
+      throw new BadRequestException('Space price is not defined');
     }
 
     // Check for overlapping reservations
@@ -95,6 +100,10 @@ export class ReservationsService {
   }
 
   async findOne(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid reservation ID format');
+    }
+
     const reservation = await this.reservationModel
       .findById(id)
       .populate('user', 'name email phone')
@@ -124,7 +133,7 @@ export class ReservationsService {
       .exec();
   }
 
-  async updateStatus(id: string, status: string, userId?: string) {
+  async updateStatus(id: string, status: string) {
     const reservation = await this.reservationModel.findById(id);
 
     if (!reservation) {

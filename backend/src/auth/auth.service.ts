@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -15,13 +15,14 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userModel.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user.toObject();
       return result;
     }
     return null;
   }
 
-  async login(user: any) {
+  login(user: UserDocument) {
     const payload = { email: user.email, sub: user._id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -36,17 +37,28 @@ export class AuthService {
   }
 
   async register(userData: Partial<User>) {
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    const user = new this.userModel({
-      ...userData,
-      password: hashedPassword,
-    });
-    await user.save();
-    const { password, ...result } = user.toObject();
-    return result;
+    try {
+      // Add validation for required password
+      if (!userData.password) {
+        throw new Error('Password is required');
+      }
+
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const user = new this.userModel({
+        ...userData,
+        password: hashedPassword,
+      });
+      await user.save();
+      
+      // Return the same format as login
+      return this.login(user);
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   }
 
-  async refreshToken(user: any) {
+  refreshToken(user: { email: string; id: string; role: string }) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),

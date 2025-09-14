@@ -37,9 +37,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('access_token');
       const userData = localStorage.getItem('user');
       
-      if (token && userData) {
+      if (token && userData && userData !== 'undefined' && userData !== 'null' && userData.trim() !== '') {
         try {
-          setUser(JSON.parse(userData));
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser && typeof parsedUser === 'object') {
+            setUser(parsedUser);
+          } else {
+            throw new Error('Invalid user data format');
+          }
         } catch (error) {
           console.error('Error parsing user data:', error);
           localStorage.removeItem('access_token');

@@ -6,36 +6,31 @@ export declare class AuthService {
     private jwtService;
     constructor(userModel: Model<UserDocument>, jwtService: JwtService);
     validateUser(email: string, password: string): Promise<any>;
-    login(user: any): Promise<{
+    login(user: UserDocument): {
         access_token: string;
         refresh_token: string;
         user: {
-            id: any;
-            name: any;
-            email: any;
-            role: any;
+            id: unknown;
+            name: string;
+            email: string;
+            role: import("../users/schemas/user.schema").UserRole;
+        };
+    };
+    register(userData: Partial<User>): Promise<{
+        access_token: string;
+        refresh_token: string;
+        user: {
+            id: unknown;
+            name: string;
+            email: string;
+            role: import("../users/schemas/user.schema").UserRole;
         };
     }>;
-    register(userData: Partial<User>): Promise<{
-        name: string;
+    refreshToken(user: {
         email: string;
-        role: import("../users/schemas/user.schema").UserRole;
-        companyName?: string;
-        phone?: string;
-        _id: unknown;
-        $locals: Record<string, unknown>;
-        $op: "save" | "validate" | "remove" | null;
-        $where: Record<string, unknown>;
-        baseModelName?: string;
-        collection: import("mongoose").Collection;
-        db: import("mongoose").Connection;
-        errors?: import("mongoose").Error.ValidationError;
-        id?: any;
-        isNew: boolean;
-        schema: import("mongoose").Schema;
-        __v: number;
-    }>;
-    refreshToken(user: any): Promise<{
+        id: string;
+        role: string;
+    }): {
         access_token: string;
-    }>;
+    };
 }

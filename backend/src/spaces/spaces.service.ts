@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Types } from 'mongoose';
 import { Space, SpaceDocument } from './schemas/space.schema';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
@@ -30,6 +31,10 @@ export class SpacesService {
   }
 
   async findOne(id: string): Promise<Space> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid space ID format');
+    }
+
     const space = await this.spaceModel
       .findById(id)
       .populate('owner', 'name email companyName')
@@ -54,6 +59,10 @@ export class SpacesService {
     updateSpaceDto: UpdateSpaceDto,
     ownerId: string,
   ): Promise<Space> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid space ID format');
+    }
+
     const space = await this.spaceModel.findOne({ _id: id, owner: ownerId });
 
     if (!space) {
@@ -65,6 +74,10 @@ export class SpacesService {
   }
 
   async remove(id: string, ownerId: string): Promise<void> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid space ID format');
+    }
+
     const result = await this.spaceModel.deleteOne({ _id: id, owner: ownerId });
 
     if (result.deletedCount === 0) {

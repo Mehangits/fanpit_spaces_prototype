@@ -76,7 +76,7 @@ let AuthService = class AuthService {
         }
         return null;
     }
-    async login(user) {
+    login(user) {
         const payload = { email: user.email, sub: user._id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),
@@ -90,13 +90,21 @@ let AuthService = class AuthService {
         };
     }
     async register(userData) {
-        const hashedPassword = await bcrypt.hash(userData.password, 10);
-        const user = new this.userModel(Object.assign(Object.assign({}, userData), { password: hashedPassword }));
-        await user.save();
-        const _a = user.toObject(), { password } = _a, result = __rest(_a, ["password"]);
-        return result;
+        try {
+            if (!userData.password) {
+                throw new Error('Password is required');
+            }
+            const hashedPassword = await bcrypt.hash(userData.password, 10);
+            const user = new this.userModel(Object.assign(Object.assign({}, userData), { password: hashedPassword }));
+            await user.save();
+            return this.login(user);
+        }
+        catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
     }
-    async refreshToken(user) {
+    refreshToken(user) {
         const payload = { email: user.email, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),

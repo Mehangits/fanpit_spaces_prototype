@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
@@ -8,15 +9,27 @@ import { Reservation } from '@/types';
 import { Calendar, Clock, MapPin, IndianRupee } from 'lucide-react';
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchReservations();
-  }, []);
+    if (!authLoading) {
+      if (user) {
+        fetchReservations();
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [user, authLoading, router]);
 
   const fetchReservations = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await api.get('/reservations/user/my-reservations');
       setReservations(response.data);
@@ -55,7 +68,7 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">

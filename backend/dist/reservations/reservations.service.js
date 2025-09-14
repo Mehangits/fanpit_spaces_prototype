@@ -30,6 +30,9 @@ let ReservationsService = class ReservationsService {
         if (!space) {
             throw new common_1.NotFoundException('Space not found');
         }
+        if (!space.price) {
+            throw new common_1.BadRequestException('Space price is not defined');
+        }
         const overlappingReservation = await this.reservationModel.findOne({
             space: createReservationDto.spaceId,
             $or: [
@@ -70,6 +73,9 @@ let ReservationsService = class ReservationsService {
             .exec();
     }
     async findOne(id) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid reservation ID format');
+        }
         const reservation = await this.reservationModel
             .findById(id)
             .populate('user', 'name email phone')
@@ -94,7 +100,7 @@ let ReservationsService = class ReservationsService {
             .sort({ startTime: 1 })
             .exec();
     }
-    async updateStatus(id, status, userId) {
+    async updateStatus(id, status) {
         const reservation = await this.reservationModel.findById(id);
         if (!reservation) {
             throw new common_1.NotFoundException('Reservation not found');
